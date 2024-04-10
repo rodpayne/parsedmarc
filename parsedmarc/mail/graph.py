@@ -153,6 +153,8 @@ class MSGraphConnection(MailboxConnection):
     def _get_all_messages(self, url, batch_size):
         messages: list
         params = {
+            # Include message size in result.
+            '$expand': "singleValueExtendedProperties($filter=Id eq 'LONG 0x0E08')",
             '$select': 'id'
         }
         if batch_size and batch_size > 0:
@@ -171,6 +173,8 @@ class MSGraphConnection(MailboxConnection):
             if result.status_code != 200:
                 raise RuntimeError(f'Failed to fetch messages {result.text}')
             messages.extend(result.json()['value'])
+        # Return the largest messages first.
+        messages.sort(key=lambda x: int(x['singleValueExtendedProperties'][0]['value']), reverse=True)
         return messages
 
     def mark_message_read(self, message_id: str):
@@ -215,7 +219,7 @@ class MSGraphConnection(MailboxConnection):
     def watch(self, check_callback, check_timeout):
         """ Checks the mailbox for new messages every n seconds"""
         while True:
-            sleep(check_timeout)
+    #        sleep(check_timeout)    don't wait before checking
             check_callback(self)
 
     @lru_cache(maxsize=10)

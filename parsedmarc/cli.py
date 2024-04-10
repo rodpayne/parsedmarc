@@ -16,8 +16,6 @@ from multiprocessing import Pipe, Process
 import sys
 from threading import Thread
 from queue import SimpleQueue
-#from multiprocessing import Process
-#from multiprocessing import SimpleQueue
 from tqdm import tqdm
 
 from parsedmarc import get_dmarc_reports_from_mailbox, watch_inbox, \
@@ -32,7 +30,8 @@ from parsedmarc.log import logger
 from parsedmarc.utils import is_mbox
 
 formatter = logging.Formatter(
-    fmt='[%(processName)s/%(threadName)s] %(levelname)8s:%(filename)s:%(lineno)d:%(message)s',
+    fmt='[%(processName)s/%(threadName)s] ' +
+    '%(levelname)8s:%(filename)s:%(lineno)d:%(message)s',
     datefmt='%Y-%m-%d:%H:%M:%S')
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
@@ -1311,14 +1310,15 @@ def _main():
             PROCESS_MESSAGE_RESULT_QUEUE = SimpleQueue()
 
             mailbox_processes = []
-        
+
             for proc_index in range(opts.n_procs):
                 if proc_index >= opts.mailbox_batch_size:
-                    logger.warning(f"mailbox n_procs ({opts.n_procs}) limited to mailbox batch_size ({opts.mailbox_batch_size})")
+                    logger.warning(f"mailbox n_procs ({opts.n_procs}) \
+                                   limited to mailbox batch_size \
+                                   ({opts.mailbox_batch_size})")
                     break
 
                 mailbox_process = Thread(
-    #            mailbox_process = Process(
                     target=get_dmarc_reports_from_message,
                     args=(
                         PROCESS_MESSAGE_INPUT_QUEUE,

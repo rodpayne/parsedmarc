@@ -1,7 +1,6 @@
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from time import sleep
 from typing import List, Optional
 
 from azure.identity import UsernamePasswordCredential, \
@@ -154,7 +153,8 @@ class MSGraphConnection(MailboxConnection):
         messages: list
         params = {
             # Include message size in result.
-            '$expand': "singleValueExtendedProperties($filter=Id eq 'LONG 0x0E08')",
+            '$expand':
+                "singleValueExtendedProperties($filter=Id eq 'LONG 0x0E08')",
             '$select': 'id'
         }
         if batch_size and batch_size > 0:
@@ -174,7 +174,11 @@ class MSGraphConnection(MailboxConnection):
                 raise RuntimeError(f'Failed to fetch messages {result.text}')
             messages.extend(result.json()['value'])
         # Return the largest messages first.
-        messages.sort(key=lambda x: int(x['singleValueExtendedProperties'][0]['value']), reverse=True)
+        messages.sort(
+            key=lambda x:
+                int(x['singleValueExtendedProperties'][0]['value']),
+            reverse=True
+        )
         return messages
 
     def mark_message_read(self, message_id: str):
@@ -219,7 +223,7 @@ class MSGraphConnection(MailboxConnection):
     def watch(self, check_callback, check_timeout):
         """ Checks the mailbox for new messages every n seconds"""
         while True:
-    #        sleep(check_timeout)    don't wait before checking
+            # sleep(check_timeout)    don't wait before checking
             check_callback(self)
 
     @lru_cache(maxsize=10)

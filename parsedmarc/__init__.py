@@ -48,6 +48,7 @@ MAGIC_GZIP = b"\x1F\x8B"
 MAGIC_XML = b"\x3c\x3f\x78\x6d\x6c\x20"
 MAGIC_JSON = b"\7b"
 
+
 class ParserError(RuntimeError):
     """Raised whenever the parser fails for some reason"""
 
@@ -96,13 +97,11 @@ def _parse_report_record(record, ip_db_path=None,
     new_record = OrderedDict()
     new_record_source = get_ip_address_info(
         record["row"]["source_ip"],
-#        cache=IP_ADDRESS_CACHE,
         ip_db_path=ip_db_path,
         always_use_local_files=always_use_local_files,
         reverse_dns_map_path=reverse_dns_map_path,
         reverse_dns_map_url=reverse_dns_map_url,
         offline=offline,
-#        reverse_dns_map=REVERSE_DNS_MAP,
         nameservers=nameservers,
         timeout=dns_timeout)
     new_record["source"] = new_record_source
@@ -1341,6 +1340,7 @@ def get_dmarc_reports_from_mbox(input_, nameservers=None, dns_timeout=2.0,
                         ("forensic_reports", forensic_reports),
                         ("smtp_tls_reports", smtp_tls_reports)])
 
+
 def get_dmarc_reports_from_message(
                             process_message_input_queue,
                             process_message_result_queue,
@@ -1362,7 +1362,7 @@ def get_dmarc_reports_from_message(
         logger.debug("Processing message: UID {0}".format(
             msg_uid
         ))
-        
+
         aggregate_reports = []
         forensic_reports = []
         smtp_tls_reports = []
@@ -1378,13 +1378,15 @@ def get_dmarc_reports_from_message(
         msg_content = connection.fetch_message(msg_uid)
         try:
             sa = strip_attachment_payloads
-            parsed_email = parse_report_email(msg_content,
-                                            nameservers=nameservers,
-                                            dns_timeout=dns_timeout,
-                                            ip_db_path=ip_db_path,
-                                            offline=offline,
-                                            strip_attachment_payloads=sa,
-                                            keep_alive=connection.keepalive)
+            parsed_email = parse_report_email(
+                msg_content,
+                nameservers=nameservers,
+                dns_timeout=dns_timeout,
+                ip_db_path=ip_db_path,
+                offline=offline,
+                strip_attachment_payloads=sa,
+                keep_alive=connection.keepalive
+            )
             if parsed_email["report_type"] == "aggregate":
                 aggregate_reports.append(parsed_email["report"])
                 aggregate_report_msg_uids.append(msg_uid)
@@ -1437,7 +1439,7 @@ def get_dmarc_reports_from_message(
                     for i in range(number_of_agg_report_msgs):
                         msg_uid = aggregate_report_msg_uids[i]
                         logger.debug(
-                            "Moving message UID {0}".format( 
+                            "Moving message UID {0}".format(
                                     msg_uid
                                 ))
                         try:
@@ -1487,12 +1489,14 @@ def get_dmarc_reports_from_message(
                             e = "Error moving message UID {0}: {1}".format(
                                 msg_uid, e)
                             logger.error("Mailbox error: {0}".format(e))
-        results = OrderedDict([("aggregate_reports", aggregate_reports),
-                            ("forensic_reports", forensic_reports),
-                            ("smtp_tls_reports", smtp_tls_reports)])
+        results = OrderedDict([
+            ("aggregate_reports", aggregate_reports),
+            ("forensic_reports", forensic_reports),
+            ("smtp_tls_reports", smtp_tls_reports),
+        ])
 
         process_message_result_queue.put(results)
-        
+
     return results
 
 
@@ -1568,8 +1572,10 @@ def get_dmarc_reports_from_mailbox(
 
     messages = connection.fetch_messages(reports_folder, batch_size=batch_size)
     total_messages = len(messages)
-    logger.debug("Identified {0} messages in {1}".format(total_messages,
-                                                    reports_folder))
+    logger.debug("Identified {0} messages in {1}".format(
+        total_messages,
+        reports_folder,
+    ))
     if total_messages == 0:
         sleep(check_timeout)
     else:
@@ -1584,7 +1590,7 @@ def get_dmarc_reports_from_mailbox(
 
         for i in range(message_limit):
             msg_uid = messages[i]
-            
+
             process_message_input_queue.put(
                 OrderedDict([("msg_uid", msg_uid)])
             )
@@ -1600,10 +1606,13 @@ def get_dmarc_reports_from_mailbox(
 
     # ----- return results for this batch of messages -----
 
-    results = OrderedDict([("aggregate_reports", aggregate_reports),
-                        ("forensic_reports", forensic_reports),
-                        ("smtp_tls_reports", smtp_tls_reports)])
+    results = OrderedDict([
+        ("aggregate_reports", aggregate_reports),
+        ("forensic_reports", forensic_reports),
+        ("smtp_tls_reports", smtp_tls_reports),
+    ])
     return results
+
 
 def watch_inbox(
                     PROCESS_MESSAGE_INPUT_QUEUE,
@@ -1611,14 +1620,14 @@ def watch_inbox(
                     mailbox_connection: MailboxConnection,
                     callback: Callable,
                     reports_folder="INBOX",
-                    archive_folder="Archive", 
-                    delete=False, 
+                    archive_folder="Archive",
+                    delete=False,
                     test=False,
-                    check_timeout=30, 
+                    check_timeout=30,
                     ip_db_path=None,
-                    offline=False, 
+                    offline=False,
                     nameservers=None,
-                    dns_timeout=6.0, 
+                    dns_timeout=6.0,
                     strip_attachment_payloads=False,
                     batch_size=None,
                 ):

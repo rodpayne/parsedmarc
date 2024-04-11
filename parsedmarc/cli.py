@@ -1320,6 +1320,7 @@ def _main():
 
                 mailbox_process = Thread(
                     target=get_dmarc_reports_from_message,
+                    daemon=True,
                     args=(
                         PROCESS_MESSAGE_INPUT_QUEUE,
                         PROCESS_MESSAGE_RESULT_QUEUE,

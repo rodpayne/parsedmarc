@@ -556,6 +556,9 @@ def _main():
                 opts.log_file = general_config["log_file"]
             if "n_procs" in general_config:
                 opts.n_procs = general_config.getint("n_procs")
+                if opts.n_procs <= 0:
+                    logger.error("Process requires n_procs > 0")
+                    exit(-1)
             if "ip_db_path" in general_config:
                 opts.ip_db_path = general_config["ip_db_path"]
             else:
